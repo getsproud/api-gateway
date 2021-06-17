@@ -1,0 +1,82 @@
+{
+  "name": "@sproud/service-gateway",
+  "version": "0.8.3",
+  "description": "API Gateway Microservice for sproud.io",
+  "main": "main.js",
+  "author": "Dominic Rico Gómez <rico@sproud.io>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getsproud/sproud.git"
+  },
+  "scripts": {
+    "release": "CI=true HUSKY_SKIP_HOOKS=1 GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d '=' -f2) semantic-release  --no-ci",
+    "build": "babel src -d dist -w --copy-files --delete-dir-on-start",
+    "clean": "node -e 'require(\"rimraf\")(\"./dist\", () => {})'",
+    "start": "node dist/main.js",
+    "test": "mocha --recursive \"./test/*.js\"",
+    "lint": "eslint . -c .eslintrc --cache --cache-location ./node_modules/.cache/eslint",
+    "dev": "DEBUG=engine,socket.io* nodemon --exec babel-node src/main.js",
+    "precommit": "lint-staged"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "connect-redis": "^5.0.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "cote": "^1.0.0",
+    "deep-email-validator": "^0.1.17",
+    "error-to-json": "^2.0.0",
+    "express": "^4.17.1",
+    "express-rate-limit": "^5.1.3",
+    "express-session": "^1.17.1",
+    "express-subdomain": "^1.0.5",
+    "express-winston": "^4.0.5",
+    "helmet": "^4.2.0",
+    "ical-generator": "^1.15.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.12.11",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
+    "rate-limit-redis": "^2.0.0",
+    "redis": "^3.0.2",
+    "spdy": "^4.0.2",
+    "stoppable": "^1.1.0",
+    "winston": "^3.3.3"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^12.0.1",
+		"commitlint-config-gitmoji": "^2.2.5",
+		"husky": "^4.3.0",
+		"semantic-release": "^17.3.7",
+		"semantic-release-config-gitmoji": "^1.2.4",
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/node": "^7.12.6",
+    "@babel/plugin-transform-runtime": "^7.12.1",
+    "@babel/preset-env": "^7.12.1",
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-mocha": "^8.0.0",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "lint-staged": "^10.5.1",
+    "mocha": "^8.2.0",
+    "mocha-jenkins-reporter": "^0.4.5",
+    "nodemon": "^2.0.6"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "test/*",
+      "docs/*",
+      "dist/*",
+      "deployments/*"
+    ]
+  },
+  "engines": {
+    "node": ">= 14.15.0"
+  }
+}

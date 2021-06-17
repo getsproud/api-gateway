@@ -1,0 +1,33 @@
+{
+  "root": true,
+  "extends": [
+    "airbnb-base",
+    "plugin:node/recommended",
+    "plugin:mocha/recommended",
+  ],
+  "plugins": [
+    "node",
+    "prettier",
+    "mocha"
+  ],
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2020
+  },
+  "ecmaFeatures": {
+    "modules": true,
+    "spread" : true,
+    "restParams" : true
+  },
+  "rules": {
+    "node/no-unsupported-features/es-syntax": 0,
+    "semi": [2, "never"],
+    "comma-dangle": [2, "never"],
+    "arrow-parens": [2, "as-needed"],
+    "no-underscore-dangle": [2, { "allow": ["_id"] }],
+    "curly": [2, "multi-or-nest"],
+    "nonblock-statement-body-position": [2, "below"],
+    "no-shadow": 0,
+    "no-param-reassign": [2, { "props": false }]
+  }
+}

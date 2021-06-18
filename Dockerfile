@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.source https://github.com/getsproud/api-gateway
 # Default value; will be overridden by build_args, if passed
 ARG NODE_ENV=development
 
-ENV NODE_ENV $NODE_ENV
+ENV NODE_ENV ${NODE_ENV}
 
 WORKDIR /app
 

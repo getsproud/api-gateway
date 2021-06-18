@@ -63,4 +63,12 @@ jobs:
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         KUBECTL_VERSION: "1.20"
       with:
-        args: set image --record deployment/${{ env.IMAGE }}-app ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest -n sproud-stage
+        args: set image --record deployment/${{ env.IMAGE }}-app ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest -n sproud-
+
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_CHANNEL: releases-stage
+        SLACK_USERNAME: sproud.bot
+        SLACK_TITLE: Deployed new ${{ env.IMAGE }} service on https://stage.sproud.dev

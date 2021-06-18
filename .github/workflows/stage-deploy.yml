@@ -20,9 +20,64 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@master
+
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Login to Docker Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: dominicrico
+        password: ${{ secrets.GH_TOKEN }}
+
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: ./
+        file: ./Dockerfile
+        builder: ${{ steps.buildx.outputs.name }}
+        push: true
+        tags: ghcr.io/getsproud/${{ env.IMAGE }}:latest
+        target: production
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Deploy to Cluster
+      uses: danielr1996/kubectl-action@1.0.0
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
+        args: |
+          set image --record deployment/${{ env.IMAGE }}-app \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest \
+          -n sproud-stage
+
     - name: Get Message
       id: log
       run: echo "::set-output name=message::$(git log --no-merges --oneline)"
 
-    - name: Show Commits
-      run:  echo "${{ steps.log.outputs.message }}"
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_ICON: https://avatars.slack-edge.com/2021-06-14/2168279331762_d05933b7090308e2869b_102.png
+        SLACK_CHANNEL: releases-stage
+        SLACK_USERNAME: sproud.bot
+        SLACK_COLOR: ${{ job.status }}
+        SLACK_MESSAGE: ${{ steps.log.outputs.message }}
+        SLACK_TITLE: Deployed new ${{ env.IMAGE }} service on https://stage.sproud.dev
+        SLACK_FOOTER: Powered by sproud.

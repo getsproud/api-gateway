@@ -69,7 +69,11 @@ jobs:
         args: |
           set image --record deployment/${{ env.IMAGE }}-app \
           ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ GIT_TAG }} \
-          -n sproud-stage
+          -n sproud
+
+    - name: Get Message
+      id: log
+      run: echo "::set-output name=message::$(git log --no-merges -1 --oneline)"
 
     - name: Slack Notification
       uses: rtCamp/action-slack-notify@v2
@@ -77,4 +81,7 @@ jobs:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         SLACK_CHANNEL: releases-stage
         SLACK_USERNAME: sproud.bot
+        SLACK_COLOR: ${{ job.status }}
+        SLACK_MESSAGE: ${{ steps.log.outputs.message }}
         SLACK_TITLE: Deployed ${{ env.IMAGE }} v${{ GIT_TAG }} service on https://sproud.io
+        SLACK_FOOTER: Powered by sproud.

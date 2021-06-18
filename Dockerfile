@@ -5,10 +5,8 @@ ARG NODE_ENV=development
 ARG NPM_TOKEN=
 
 ENV NODE_ENV $NODE_ENV
-ENV NPM_TOKEN $NPM_TOKEN
 
 WORKDIR /app
-ADD docker/.npmrc .npmrc
 
 ADD package.json .
 ADD package-lock.json .

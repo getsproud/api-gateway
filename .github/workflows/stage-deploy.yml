@@ -40,15 +40,15 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v2
-        with:
-          context: ./
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: ghcr.io/getsproud/${{ env.IMAGE }}:latest
-          target: production
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: ./
+        file: ./Dockerfile
+        builder: ${{ steps.buildx.outputs.name }}
+        push: true
+        tags: ghcr.io/getsproud/${{ env.IMAGE }}:latest
+        target: production
 
     - name: Deploy to Cluster
       uses: steebchen/kubectl@master

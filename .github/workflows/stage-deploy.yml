@@ -22,7 +22,7 @@ jobs:
 
     - name: Get Message
       id: log
-      run: echo "COMMITS=$(git log --no-merges --oneline ${{ GITHUB_SHA }}...HEAD)" >> GITHUB_ENV
+      run: echo "::set-output name=message::$(git log --no-merges --oneline ${{ github.sha }}...HEAD)"
 
     - name: Show Commits
-      run:  echo "${{ env.COMMITS }}"
+      run:  echo "${{ steps.log.outputs.message }}"

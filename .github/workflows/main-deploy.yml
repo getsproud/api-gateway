@@ -66,7 +66,10 @@ jobs:
         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         KUBECTL_VERSION: "1.20"
       with:
-        args: -n sproud-stage set image --record deployment/${{ env.IMAGE }}-app ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ GIT_TAG }}
+        args: |
+          set image --record deployment/${{ env.IMAGE }}-app \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ GIT_TAG }} \
+          -n sproud-stage
 
     - name: Slack Notification
       uses: rtCamp/action-slack-notify@v2

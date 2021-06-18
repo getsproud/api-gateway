@@ -58,7 +58,7 @@ jobs:
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
     - name: Deploy to Cluster
-      uses: uses: danielr1996/kubectl-action@1.0.0
+      uses: danielr1996/kubectl-action@1.0.0
       with:
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         args: |

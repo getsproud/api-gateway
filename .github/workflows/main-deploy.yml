@@ -1,0 +1,41 @@
+name: Stage Deployment
+
+on:
+  push:
+    branches:
+    - main
+
+env:
+  IMAGE: gateway
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.TOKEN }}
+    - name: Set Tag
+      run: echo "GIT_TAG=`echo $(git describe --tags --abbrev=0)`" >> $GITHUB_ENV
+
+    - name: Login to Docker Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Image
+      run: docker build . --file Dockerfile --tag ${{ env.IMAGE }}:${{ env.GIT_TAG }}
+
+    - name: Publish Image
+      run: docker push "ghcr.io/getsproud/${{ env.IMAGE }}:${{ env.GIT_TAG }}"
+
+    - name: Deploy to Cluster
+      uses: steebchen/kubectl@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA_MAIN }}
+        KUBECTL_VERSION: "1.20"
+      with:
+        args: set image deployment/{{ env.IMAGE }}-app {{ env.IMAGE }}-service={{ env.IMAGE }}:${{ env.GIT_TAG }}" --record

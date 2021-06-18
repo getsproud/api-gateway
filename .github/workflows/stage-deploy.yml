@@ -1,0 +1,42 @@
+name: Stage Deployment
+
+on:
+  pull_request:
+    branches:
+    - main
+    paths-ignore:
+    - '*.md'
+    - LICENSE
+
+env:
+  IMAGE: gateway
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses:  actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Login to Docker Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build Image
+      run: docker build . --file Dockerfile --tag ${{ env.IMAGE }}:latest
+
+    - name: Publish Image
+      run: docker push "ghcr.io/getsproud/${{ env.IMAGE }}:latest"
+
+    - name: Deploy to Cluster
+      uses: steebchen/kubectl@master
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
+        KUBECTL_VERSION: "1.20"
+      with:
+        args: set image deployment/{{ env.IMAGE }}-app {{ env.IMAGE }}-service={{ env.IMAGE }}:latest" --record

@@ -32,8 +32,6 @@ ENTRYPOINT [ "npm", "run", "test" ]
 
 FROM builder AS production
 
-ENV NODE_ENV production
-
 RUN npm run build
 
 ENTRYPOINT [ "npm", "run", "start" ]

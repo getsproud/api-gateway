@@ -47,8 +47,13 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ghcr.io/getsproud/${{ env.IMAGE }}:latest
+        tags: latest
+        image: ${{ env.IMAGE }}
         target: production
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
 
     - name: Deploy to Cluster
       uses: steebchen/kubectl@master

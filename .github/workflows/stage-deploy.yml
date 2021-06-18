@@ -70,12 +70,13 @@ jobs:
 
     - name: Get Message
       id: log
-      run: echo "::set-output name=message::$(git log --no-merges -1 --oneline)"
+      run: echo "::set-output name=message::$(git log --no-merges --oneline ${{ github.event.pull_request.base.sha }}...HEAD)"
 
     - name: Slack Notification
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_ICON: https://avatars.slack-edge.com/2021-06-14/2168279331762_d05933b7090308e2869b_102.png
         SLACK_CHANNEL: releases-stage
         SLACK_USERNAME: sproud.bot
         SLACK_COLOR: ${{ job.status }}

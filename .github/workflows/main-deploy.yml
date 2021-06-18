@@ -79,6 +79,7 @@ jobs:
       uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_ICON: https://avatars.slack-edge.com/2021-06-14/2168279331762_d05933b7090308e2869b_102.png
         SLACK_CHANNEL: releases-stage
         SLACK_USERNAME: sproud.bot
         SLACK_COLOR: ${{ job.status }}

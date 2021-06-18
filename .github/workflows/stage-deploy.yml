@@ -70,7 +70,7 @@ jobs:
 
     - name: Get Message
       id: log
-      run: echo "::set-output name=message::$(git log --no-merges --oneline ${{ github.event.pull_request.base.sha }}...HEAD)"
+      run: echo "::set-output name=message::$(git log --no-merges --oneline ${{ GITHUB_SHA }}...HEAD)"
 
     - name: Slack Notification
       uses: rtCamp/action-slack-notify@v2

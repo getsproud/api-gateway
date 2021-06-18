@@ -11,7 +11,7 @@
   },
   "scripts": {
     "release": "HUSKY_SKIP_HOOKS=1 GITHUB_TOKEN=$(grep GITHUB_TOKEN .env | cut -d '=' -f2) semantic-release  --no-ci",
-    "build": "babel src -d dist -w --copy-files --delete-dir-on-start || exit 0",
+    "build": "babel src -d dist --copy-files --delete-dir-on-start || exit 0",
     "clean": "node -e 'require(\"rimraf\")(\"./dist\", () => {})'",
     "start": "node dist/main.js",
     "test": "mocha --recursive \"./test/*.js\"",

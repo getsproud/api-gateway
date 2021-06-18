@@ -50,7 +50,7 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ GIT_TAG }}, ghcr.io/getsproud/${{ env.IMAGE }}:latest
+        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ github.sha }}, ghcr.io/getsproud/${{ env.IMAGE }}:latest
         target: production
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
@@ -68,7 +68,7 @@ jobs:
       with:
         args: |
           set image --record deployment/${{ env.IMAGE }}-app \
-          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ GIT_TAG }} \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest \
           -n sproud
 
     - name: Get Message

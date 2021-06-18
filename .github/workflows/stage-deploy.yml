@@ -47,7 +47,7 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ghcr.io/getsproud/${{ env.IMAGE }}:latest
+        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ github.sha }}
         target: production
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
@@ -63,7 +63,7 @@ jobs:
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         args: |
           set image --record deployment/${{ env.IMAGE }}-app \
-          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ github.sha }} \
           -n sproud-stage
 
     - name: Get Message

@@ -27,10 +27,10 @@ const corsOptionsDelegate = (req, callback) => {
     optionsSuccessStatus: 200
   }
 
-  const allowed = ['employee.hq', 'sproud.dev', 'sproud.io', 'sproud.io', 'sproud.dev']
+  const allowed = ['sproud.io', 'sproud.dev']
 
   corsOptions.origin = (origin, callback) => {
-    const domain = origin.match(/(https:\/\/)?(([^.]+)\.)?(([^.]+)\.)?(employee|sproud(hq\.dev|hq\.io|\.hq|\.dev))$/)[6]
+    const domain = origin.match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[6]
 
     if (!origin || allowed.indexOf(domain) === -1) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.'

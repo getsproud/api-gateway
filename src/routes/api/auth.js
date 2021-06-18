@@ -35,7 +35,7 @@ const authRoutes = services => {
 
       try {
         const token = jwt.sign(JSON.stringify(payload), secret, { algorithm: 'RS256' })
-        const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)?(([^.]+)\.)?(employee|sproud(hq\.dev|hq\.io|\.hq|\.dev))$/)[6]
+        const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[6]
 
         res.cookie('sproud.jwt', token, { httpOnly: true, secure: true, domain: `.${domain}` })
 
@@ -157,7 +157,7 @@ const authRoutes = services => {
     if (!req.params.token || typeof req.params.token !== 'string')
       return res.status(400).json({ message: 'MISSING_PARAM', error: 'token', domain: 'api' })
 
-    const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)?(([^.]+)\.)?(employee|sproud(hq\.dev|hq\.io|\.hq|\.dev))$/)[3]
+    const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[3]
 
     try {
       const company = await services.company.send({ type: 'findBy', query: { domain } })
@@ -228,7 +228,7 @@ const authRoutes = services => {
   router.get('/logout', (req, res) => {
     req.logout()
 
-    const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)?(([^.]+)\.)?(employee|sproud(hq\.dev|hq\.io|\.hq|\.dev))$/)[6]
+    const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[6]
 
     res.cookie('sproud.jwt', {}, {
       httpOnly: true, secure: true, domain: `.${domain}`, maxAge: -1

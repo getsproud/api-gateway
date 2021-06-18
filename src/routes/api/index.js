@@ -27,7 +27,7 @@ const router = Router()
 router.use('/v1/auth', auth(services))
 
 router.get('/v1/check/company', async (req, res) => {
-  const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)?(([^.]+)\.)?(employee|sproud(hq\.dev|hq\.io|\.hq|\.dev))$/)[3]
+  const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[3]
 
   try {
     const company = await services.company.send({ type: 'findBy', query: { domain } })

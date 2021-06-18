@@ -58,19 +58,17 @@ jobs:
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
     - name: Deploy to Cluster
-      uses: steebchen/kubectl@master
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
-        KUBECTL_VERSION: "1.20"
+      uses: uses: danielr1996/kubectl-action@1.0.0
       with:
-          args: |
-            set image --record deployment/${{ env.IMAGE }}-app \
-            ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest \
-            -n sproud-stage
+        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
+        args: |
+          set image --record deployment/${{ env.IMAGE }}-app \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:latest \
+          -n sproud-stage
 
     - name: Get Message
       id: log
-      run: echo "::set-output name=message::$(git log --no-merges --oneline ${{ GITHUB_SHA }}...HEAD)"
+      run: echo "::set-output name=message::$(git log --no-merges --oneline ${{ env.GITHUB_SHA }}...HEAD)"
 
     - name: Slack Notification
       uses: rtCamp/action-slack-notify@v2

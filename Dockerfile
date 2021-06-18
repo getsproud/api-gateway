@@ -1,8 +1,9 @@
 FROM node:14.15.0-stretch AS builder
 
+LABEL org.opencontainers.image.source https://github.com/getsproud/api-gateway
+
 # Default value; will be overridden by build_args, if passed
 ARG NODE_ENV=development
-ARG NPM_TOKEN=
 
 ENV NODE_ENV $NODE_ENV
 

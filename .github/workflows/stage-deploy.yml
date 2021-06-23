@@ -1,7 +1,7 @@
 name: Stage Deployment
 
 on:
-  pull_request:
+  push:
     branches:
     - main
     paths-ignore:
@@ -50,12 +50,8 @@ jobs:
         tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ github.sha }}
         target: production
         cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache-new
-
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache
+        build-args: NODE_ENV="stage"
 
     - name: Deploy to Cluster
       uses: danielr1996/kubectl-action@1.0.0

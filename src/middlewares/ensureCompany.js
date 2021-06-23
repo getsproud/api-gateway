@@ -8,7 +8,7 @@ const ensureCompany = service => async (req, res, next) => {
   if (process.env.NODE_ENV === 'test' || req.user.roles.indexOf('superadmin') !== -1)
     return next()
 
-  const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)?(([^.]+)\.)?(employee|sproud(hq\.dev|hq\.io|\.hq|\.dev))$/)[3]
+  const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[3]
 
   try {
     const company = await service.send({ type: 'findBy', query: { domain } })

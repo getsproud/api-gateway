@@ -1,12 +1,6 @@
 name: Production Deployment
 
-on:
-  push:
-    branches:
-    - main
-    paths-ignore:
-    - '*.md'
-    - LICENSE
+on: workflow_dispatch
 
 env:
   IMAGE: gateway

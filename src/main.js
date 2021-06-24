@@ -45,7 +45,7 @@ const corsOptionsDelegate = (req, callback) => {
 
 const rateLimiter = new RateLimit({
   store: new RateLimitStore({
-    client: redis.createClient(`redis://gateway-redis-service.sproud${process.env.NODE_ENV === 'stage' ? '-stage' : ''}.svc.cluster.local:6379/1`)
+    client: redis.createClient(`redis://${process.env.COTE_DISCOVERY_REDIS_HOST}:6379/1`)
   }),
   max: 10,
   windowMs: 1000,

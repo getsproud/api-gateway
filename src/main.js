@@ -27,12 +27,10 @@ const corsOptionsDelegate = (req, callback) => {
     optionsSuccessStatus: 200
   }
 
-  const allowed = ['sproud.io', 'sproud.dev']
-
   corsOptions.origin = (origin, callback) => {
-    const domain = origin.match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[6]
+    const domain = origin.match(/^(https?:\/\/.*\.sproud\.(dev|io)$)/)
 
-    if (!origin || allowed.indexOf(domain) === -1) {
+    if (!origin || domain === null) {
       const msg = 'The CORS policy for this site does not allow access from the specified Origin.'
       return callback(new Error(msg), false)
     }
@@ -40,7 +38,7 @@ const corsOptionsDelegate = (req, callback) => {
     return callback(null, true)
   }
 
-  callback(null, corsOptions)
+  return callback(null, corsOptions)
 }
 
 const rateLimiter = new RateLimit({
@@ -56,7 +54,7 @@ services.authentication = services.auth
 services.email = services.mail
 app.get('/healthz/:type/:service?', async (req, res) => {
   try {
-    if (!req.params.service || req.params.service === 'gateway')
+    if (!req.params.service || req.params.service === 'api-gateway')
       return res.sendStatus(200)
 
     const service = services[req.params.service]
@@ -81,7 +79,7 @@ app.use(expressWinston.logger({
   meta: true
 }))
 
-// app.options('*', cors(corsOptionsDelegate))
+app.options('*', cors(corsOptionsDelegate))
 app.use(cors(corsOptionsDelegate))
 app.use(helmet())
 app.use(cookieParser())
@@ -103,8 +101,13 @@ app.use((err, req, res, next) => {
 if (process.env.NODE_ENV === 'production')
   app.use(rateLimiter)
 
-app.use(subdomain(`api${process.env.NODE_ENV === 'production' ? '' : '.*'}`, apiRoutes))
-app.use(subdomain(`join${process.env.NODE_ENV === 'production' ? '' : '.*'}`, joinRoutes))
+if (process.env.NODE_ENV !== 'production') {
+  app.use(subdomain('api.*', apiRoutes))
+  app.use(subdomain('join.*', joinRoutes))
+} else {
+  app.use(subdomain('api', apiRoutes))
+  app.use(subdomain('join', joinRoutes))
+}
 
 app.use(expressWinston.errorLogger({
   transports: [

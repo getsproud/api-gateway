@@ -37,7 +37,7 @@ const authRoutes = services => {
         const token = jwt.sign(JSON.stringify(payload), secret, { algorithm: 'RS256' })
         const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[6]
 
-        res.cookie('sproud.jwt', token, { httpOnly: true, secure: true, domain: `.${domain}` })
+        res.cookie('sproud.jwt', token, { secure: true, domain: `${domain}` })
 
         const query = { _id: employee.data.company }
 
@@ -231,7 +231,7 @@ const authRoutes = services => {
     const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[6]
 
     res.cookie('sproud.jwt', {}, {
-      httpOnly: true, secure: true, domain: `.${domain}`, maxAge: -1
+      secure: true, domain: `${domain}`, maxAge: -1
     })
     return res.sendStatus(204)
   })

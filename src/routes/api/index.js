@@ -27,6 +27,14 @@ const router = Router()
 router.use('/v1/auth', auth(services))
 
 router.get('/v1/check/company', async (req, res) => {
+  const origin = req.get('origin')
+
+  if (!origin) {
+    return res.status(403).json({
+      i18n: 'FORBIDDEN', domain: 'api', code: 403, data: null, message: null, stack: null
+    })
+  }
+
   const domain = req.get('origin').match(/(https:\/\/)?(([^.]+)\.)(([^.]+)\.)?(sproud(\.dev|\.io))$/)[3]
 
   try {
@@ -40,7 +48,7 @@ router.get('/v1/check/company', async (req, res) => {
 
 router.use((req, res, next) => passport.authenticate('jwt', { session: false }, (err, employee, info) => {
   if (info)
-    return res.status(401).json(info)
+    return res.status(401).json({ error: info.message })
 
   if (err)
     return res.status(err.code).json(err)

@@ -9,7 +9,7 @@ on:
     - LICENSE
 
 env:
-  IMAGE: gateway
+  IMAGE: api-gateway
 
 jobs:
   build-and-deploy:

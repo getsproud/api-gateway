@@ -12,7 +12,7 @@ env:
   IMAGE: api-gateway
 
 jobs:
-  build-and-deploy:
+  build-image:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +32,24 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: Login to Docker Registry
+  get-tag:
+    runs-on: ubuntu-latest
+    needs: [build-image]
+
+    steps:
+    - name: Get the Ref
+      id: get-ref
+      uses: ankitvgupta/ref-to-tag-action@master
+      with:
+        ref: ${{ github.ref }}
+        head_ref: ${{ github.head_ref }}
+
+  push-image:
+    needs: [get-tag]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Login to Github Container Registry
       uses: docker/login-action@v1
       with:
         registry: ghcr.io
@@ -47,21 +64,31 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ github.sha }}
+        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ steps.get-ref.outputs.tag }}
         target: production
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
         build-args: NODE_ENV="stage"
 
+  deploy-to-cluster:
+    needs: [push-image]
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Deploy to Cluster
       uses: danielr1996/kubectl-action@1.0.0
       with:
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         args: |
           set image --record deployment/${{ env.IMAGE }}-app \
-          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ github.sha }} \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ steps.get-ref.outputs.tag }} \
           -n sproud-stage
 
+  send-notification:
+    need: [deploy-to-cluster]
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Get Message
       id: log
       run: echo "::set-output name=message::$(git log --no-merges --oneline)"

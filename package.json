@@ -16,7 +16,7 @@
     "start": "node dist/main.js",
     "test": "mocha --recursive \"./test/*.js\"",
     "lint": "eslint . -c .eslintrc --cache --cache-location ./node_modules/.cache/eslint",
-    "dev": "DEBUG=engine,socket.io* nodemon --exec babel-node src/main.js",
+    "dev": "telepresence intercept api-gateway -n sproud-stage --port 8080 -- nodemon --exec babel-node src/main.js",
     "precommit": "lint-staged"
   },
   "dependencies": {

@@ -72,7 +72,7 @@ jobs:
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   deploy-to-cluster:
-    needs: [build-image]
+    needs: [build-image, get-tag]
     runs-on: ubuntu-latest
 
     steps:

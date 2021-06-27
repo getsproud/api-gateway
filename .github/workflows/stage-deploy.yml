@@ -85,7 +85,7 @@ jobs:
           -n sproud-stage
 
   send-notification:
-    need: [deploy-to-cluster]
+    needs: [deploy-to-cluster]
     runs-on: ubuntu-latest
 
     steps:

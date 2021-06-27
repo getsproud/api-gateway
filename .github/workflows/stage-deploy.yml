@@ -81,7 +81,7 @@ jobs:
       with:
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         args: |
-          set image --record deployment/${{ env.IMAGE }}-app \
+          set image --record deployment/${{ env.IMAGE }} \
           ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.tag }} \
           -n sproud-stage
 

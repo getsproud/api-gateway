@@ -59,15 +59,13 @@ const budgetRouter = services => {
       }
 
       if (response.data && response.data.spendings) {
-        response.data.spendings = response.data.spendings.map(async budget => {
-          const spendings = await services.budget.send({
-            type: 'getSpendings',
-            query: { _id: { $in: budget.spendings } },
-            options: { limit: 9999 }
-          })
-
-          return spendings
+        response.data.spendings = await services.budget.send({
+          type: 'getSpendings',
+          query: { _id: { $in: response.data.spendings } },
+          options: { limit: 9999 }
         })
+
+        response.data.spendings = response.data.spendings.data.docs
       }
 
       return res.status(response.code).json(response)

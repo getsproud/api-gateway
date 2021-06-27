@@ -14,7 +14,6 @@ env:
 jobs:
   get-tag:
     runs-on: ubuntu-latest
-    needs: [build-image]
 
     steps:
     - name: Get the Ref
@@ -41,7 +40,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        key: ${{ runner.os }}-buildx-${{ steps.get-ref.outputs.tag }}
         restore-keys: |
           ${{ runner.os }}-buildx-
 
@@ -63,8 +62,13 @@ jobs:
         tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ steps.get-ref.outputs.tag }}
         target: production
         cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache
+        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
         build-args: NODE_ENV="stage"
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   deploy-to-cluster:
     needs: [push-image]

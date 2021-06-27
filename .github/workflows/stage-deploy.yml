@@ -12,7 +12,20 @@ env:
   IMAGE: api-gateway
 
 jobs:
+  get-tag:
+    runs-on: ubuntu-latest
+    needs: [build-image]
+
+    steps:
+    - name: Get the Ref
+      id: get-ref
+      uses: ankitvgupta/ref-to-tag-action@master
+      with:
+        ref: ${{ github.ref }}
+        head_ref: ${{ github.head_ref }}
+
   build-image:
+    needs: [get-tag]
     runs-on: ubuntu-latest
 
     steps:
@@ -32,23 +45,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-  get-tag:
-    runs-on: ubuntu-latest
-    needs: [build-image]
-
-    steps:
-    - name: Get the Ref
-      id: get-ref
-      uses: ankitvgupta/ref-to-tag-action@master
-      with:
-        ref: ${{ github.ref }}
-        head_ref: ${{ github.head_ref }}
-
-  push-image:
-    needs: [get-tag]
-    runs-on: ubuntu-latest
-
-    steps:
     - name: Login to Github Container Registry
       uses: docker/login-action@v1
       with:

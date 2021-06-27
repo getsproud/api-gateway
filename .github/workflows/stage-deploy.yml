@@ -14,7 +14,8 @@ env:
 jobs:
   get-tag:
     runs-on: ubuntu-latest
-
+    outputs:
+      tag: ${{ steps.get-ref.outputs.tag }}
     steps:
     - name: Get the Ref
       id: get-ref
@@ -40,7 +41,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ steps.get-ref.outputs.tag }}
+        key: ${{ runner.os }}-buildx-${{ needs.get-tag.outputs.tag }}
         restore-keys: |
           ${{ runner.os }}-buildx-
 
@@ -59,7 +60,7 @@ jobs:
         file: ./Dockerfile
         builder: ${{ steps.buildx.outputs.name }}
         push: true
-        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ steps.get-ref.outputs.tag }}
+        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.tag }}
         target: production
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
@@ -81,7 +82,7 @@ jobs:
         kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
         args: |
           set image --record deployment/${{ env.IMAGE }}-app \
-          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ steps.get-ref.outputs.tag }} \
+          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.tag }} \
           -n sproud-stage
 
   send-notification:

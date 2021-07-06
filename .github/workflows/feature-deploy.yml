@@ -1,12 +1,16 @@
-name: Production Deployment
+name: Feature Deployment
 
 on:
-  release:
-    types: [released]
+  push:
+    branches:
+      - "feature/*"
+    paths-ignore:
+      - "*.md"
+      - LICENSE
 
 env:
   IMAGE: api-gateway
-  CLUSTER_ENV: production
+  CLUSTER_ENV: development
 
 jobs:
   run-tests:
@@ -25,14 +29,13 @@ jobs:
   get-tag:
     runs-on: ubuntu-latest
     outputs:
-      TAG: ${{ steps.get-ref.outputs.tag }}
+      TAG: ${{ steps.get-ref.outputs.TAG }}
     steps:
-      - name: Get the Ref
+      - name: Get the Tag
         id: get-ref
-        uses: ankitvgupta/ref-to-tag-action@master
-        with:
-          ref: ${{ github.ref }}
-          head_ref: ${{ github.head_ref }}
+        run: |
+          echo $(echo ${{ github.ref }} | cut -c 12- | cut -d '-' -f 1 | sed s/\\//-/g)
+          echo ::set-output name=TAG::$(echo ${{ github.ref }} | cut -c 12- | cut -d '-' -f 1 | sed s/\\//-/g)
 
   build-image:
     needs: [get-tag, run-tests]
@@ -70,11 +73,11 @@ jobs:
           file: ./Dockerfile
           builder: ${{ steps.buildx.outputs.name }}
           push: true
-          tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.TAG }}, ghcr.io/getsproud/${{ env.IMAGE }}:latest
-          target: production
+          tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.TAG }}
+          target: develop
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
-          build-args: NODE_ENV="production"
+          build-args: NODE_ENV="development"
 
       - name: Move cache
         run: |
@@ -101,23 +104,7 @@ jobs:
           # install/upgrade helm chart
           KUBECONFIG=/tmp/.kube/config helm upgrade --install ${{ env.IMAGE }} ./deploy/helm/${{ env.IMAGE }} \
           --values ./deploy/helm/${{ env.IMAGE }}/env.values.${{ env.CLUSTER_ENV }}.yaml \
-          --set service.tag=latest \
-          --set nodeEnv=production \
-          --namespace sproud \
+          --set service.tag=${{ needs.get-tag.outputs.TAG }} \
+          --set nodeEnv=${{ env.CLUSTER_ENV }} \
+          --namespace sproud-${{ needs.get-tag.outputs.TAG }} \
           --create-namespace
-
-      - name: Get Message
-        id: log
-        run: echo "::set-output name=message::$(git log --no-merges -1 --oneline)"
-
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_ICON: https://avatars.slack-edge.com/2021-06-14/2168279331762_d05933b7090308e2869b_102.png
-          SLACK_CHANNEL: releases-prod
-          SLACK_USERNAME: sproud.bot
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_MESSAGE: ${{ steps.log.outputs.message }}
-          SLACK_TITLE: Deployed ${{ env.IMAGE }} v${{ GIT_TAG }} service on https://sproud.io
-          SLACK_FOOTER: Powered by sproud.

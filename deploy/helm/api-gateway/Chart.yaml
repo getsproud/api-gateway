@@ -1,0 +1,11 @@
+apiVersion: v3
+name: sproud-react-app
+description: sproud Frontend Application
+type: application
+version: 0.0.10
+appVersion: "0.1.0"
+maintainers:
+  - name: Dominic Rico Gómez
+    email: rico@sproud.io
+    url: https://sproud.io
+icon: https://sproud.io/static/media/logo.cd4e70b2.svg

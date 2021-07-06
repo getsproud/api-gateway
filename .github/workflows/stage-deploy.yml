@@ -1,107 +1,112 @@
 name: Stage Deployment
 
 on:
-  push:
-    branches:
-    - main
-    paths-ignore:
-    - '*.md'
-    - LICENSE
+  release:
+    types: [prereleased]
 
 env:
   IMAGE: api-gateway
+  CLUSTER_ENV: development
 
 jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Jest
+        run: npm run test  -- --coverage --silent --passWithNoTests
+
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          override_branch: main
+
   get-tag:
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.get-ref.outputs.tag }}
+      TAG: ${{ steps.get-ref.outputs.tag }}
     steps:
-    - name: Get the Ref
-      id: get-ref
-      uses: ankitvgupta/ref-to-tag-action@master
-      with:
-        ref: ${{ github.ref }}
-        head_ref: ${{ github.head_ref }}
+      - name: Get the Ref
+        id: get-ref
+        uses: ankitvgupta/ref-to-tag-action@master
+        with:
+          ref: ${{ github.ref }}
+          head_ref: ${{ github.head_ref }}
 
   build-image:
-    needs: [get-tag]
+    needs: [get-tag, run-tests]
     runs-on: ubuntu-latest
 
     steps:
-    - uses:  actions/checkout@v2
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Docker Buildx
-      id: buildx
-      uses: docker/setup-buildx-action@master
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@master
 
-    - name: Cache Docker layers
-      uses: actions/cache@v2
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ needs.get-tag.outputs.tag }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ needs.get-tag.outputs.TAG }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
-    - name: Login to Github Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: dominicrico
-        password: ${{ secrets.GH_TOKEN }}
+      - name: Login to Github Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: dominicrico
+          password: ${{ secrets.GH_TOKEN }}
 
-    - name: Build and push
-      id: docker_build
-      uses: docker/build-push-action@v2
-      with:
-        context: ./
-        file: ./Dockerfile
-        builder: ${{ steps.buildx.outputs.name }}
-        push: true
-        tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.tag }}
-        target: production
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
-        build-args: NODE_ENV="stage"
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          push: true
+          tags: ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.TAG }}
+          target: production
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          build-args: NODE_ENV="stage"
 
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
   deploy-to-cluster:
     needs: [build-image, get-tag]
     runs-on: ubuntu-latest
 
     steps:
-    - name: Deploy to Cluster
-      uses: danielr1996/kubectl-action@1.0.0
-      with:
-        kubeconfig: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
-        args: |
-          set image --record deployment.apps/${{ env.IMAGE }} \
-          ${{ env.IMAGE }}-service=ghcr.io/getsproud/${{ env.IMAGE }}:${{ needs.get-tag.outputs.tag }} \
-          -n sproud-stage
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-  send-notification:
-    needs: [deploy-to-cluster]
-    runs-on: ubuntu-latest
+      - name: Deploy to Cluster
+        env:
+          KUBECONFIG: ${{ secrets.KUBE_CONFIG_DATA_STAGE }}
+        run: |
+          mkdir -p /tmp/.kube
+          touch /tmp/.kube/config
+          echo "${{ env.KUBECONFIG }}" | base64 --decode >> /tmp/.kube/config
 
-    steps:
-    - name: Get Message
-      id: log
-      run: echo "::set-output name=message::$(git log --no-merges --oneline)"
-
-    - name: Slack Notification
-      uses: rtCamp/action-slack-notify@v2
-      env:
-        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        SLACK_ICON: https://avatars.slack-edge.com/2021-06-14/2168279331762_d05933b7090308e2869b_102.png
-        SLACK_CHANNEL: releases-stage
-        SLACK_USERNAME: sproud.bot
-        SLACK_COLOR: ${{ job.status }}
-        SLACK_MESSAGE: ${{ steps.log.outputs.message }}
-        SLACK_TITLE: Deployed new ${{ env.IMAGE }} service on https://stage.sproud.dev
-        SLACK_FOOTER: Powered by sproud.
+          # install/upgrade helm chart
+          KUBECONFIG=/tmp/.kube/config helm upgrade --install ${{ env.IMAGE }} ./deploy/helm/${{ env.IMAGE }} \
+          --values ./deploy/helm/${{ env.IMAGE }}/env.values.${{ env.CLUSTER_ENV }}.yaml \
+          --set service.tag=${{ needs.get-tag.outputs.TAG }} \
+          --set nodeEnv=production \
+          --namespace sproud-stage \
+          --create-namespace

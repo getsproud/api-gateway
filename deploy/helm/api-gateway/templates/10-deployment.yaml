@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Values.service.image }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $.Values.service.image | quote }}
+      {{- if ne $.Values.environment "io" }}
+      feature: {{ $.Values.service.tag | quote }}
+      {{- else }}
+      tag: {{ $.Values.service.tag | quote }}
+      {{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Values.service.image | quote }}
+        {{- if ne $.Values.environment "io" }}
+        feature: {{ $.Values.service.tag | quote }}
+        {{- else }}
+        tag: {{ $.Values.service.tag | quote }}
+        {{- end }}
+    spec:
+      containers:
+      - name: {{ $.Values.service.image }}-service
+        image: ghcr.io/getsproud/{{ $.Values.service.image }}:{{ $.Values.service.tag }}
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            path: /healthz/readiness/{{ $image }}
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz/liveness/{{ $image }}
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: {{ $.Values.nodeEnv }}
+      imagePullSecrets:
+      - name: gh-registry
+---

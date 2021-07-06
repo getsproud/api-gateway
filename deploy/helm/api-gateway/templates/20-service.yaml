@@ -5,7 +5,7 @@ metadata:
     app: {{ $.Values.service.image | quote  }}
     {{- if and (ne $.Values.environment "io") (contains "rc-" $.Values.service.tag) }}
     feature: stage
-    {{ - else if ne $.Values.environment "io" }}
+    {{- else if ne $.Values.environment "io" }}
     feature: {{ $.Values.service.tag | quote }}
     {{- else }}
     tag: {{ $.Values.service.tag| quote  }}
@@ -20,7 +20,7 @@ spec:
     app: {{ $.Values.service.image }}
     {{- if and (ne $.Values.environment "io") (contains "rc-" $.Values.service.tag) }}
     feature: stage
-    {{ - else if ne $.Values.environment "io" }}
+    {{- else if ne $.Values.environment "io" }}
     feature: {{ $.Values.service.tag | quote }}
     {{- else }}
     tag: {{ $.Values.service.tag | quote }}

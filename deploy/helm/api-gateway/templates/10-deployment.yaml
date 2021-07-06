@@ -28,13 +28,13 @@ spec:
         imagePullPolicy: Always
         readinessProbe:
           httpGet:
-            path: /healthz/readiness/{{ $image }}
+            path: /healthz/readiness/{{ $.Values.service.image }
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10
         livenessProbe:
           httpGet:
-            path: /healthz/liveness/{{ $image }}
+            path: /healthz/liveness/{{ $.Values.service.image }
             port: 8080
           initialDelaySeconds: 60
           periodSeconds: 10

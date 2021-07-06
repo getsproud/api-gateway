@@ -42,8 +42,18 @@ spec:
         - containerPort: 8080
           protocol: TCP
         env:
+        - name: COTE_LOG
+          value: "false"
+        - name: DOMAIN
+          value: {{ $.Values.domain }}.{{ $.Values.environment }}
         - name: NODE_ENV
           value: {{ $.Values.nodeEnv }}
+        - name: COTE_DISCOVERY_REDIS_HOST
+          value: {{ $.Values.redis.service }}.{{ $.Values.namespace}}.svc.cluster.local
+        - name: DISCOVERY_HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
       imagePullSecrets:
       - name: gh-registry
 ---

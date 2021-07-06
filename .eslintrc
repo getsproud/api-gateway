@@ -3,12 +3,12 @@
   "extends": [
     "airbnb-base",
     "plugin:node/recommended",
-    "plugin:mocha/recommended",
+    "plugin:jest/recommended"
   ],
   "plugins": [
     "node",
     "prettier",
-    "mocha"
+    "jest"
   ],
   "parserOptions": {
     "sourceType": "module",

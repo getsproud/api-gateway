@@ -101,7 +101,7 @@ app.use((err, req, res, next) => {
 if (process.env.NODE_ENV === 'production')
   app.use(rateLimiter)
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.staging === 'true') {
   app.use(subdomain('api.*', apiRoutes))
   app.use(subdomain('join.*', joinRoutes))
 } else {

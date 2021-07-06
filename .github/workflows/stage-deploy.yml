@@ -108,5 +108,6 @@ jobs:
           --values ./deploy/helm/${{ env.IMAGE }}/env.values.${{ env.CLUSTER_ENV }}.yaml \
           --set service.tag=${{ needs.get-tag.outputs.TAG }} \
           --set nodeEnv=production \
+          --set staging=true \
           --namespace sproud-stage \
           --create-namespace

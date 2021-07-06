@@ -46,6 +46,8 @@ spec:
         - containerPort: 8080
           protocol: TCP
         env:
+        - name: STAGING
+          value: {{ $.Values.staging | quote }}
         - name: COTE_LOG
           value: "false"
         - name: DOMAIN

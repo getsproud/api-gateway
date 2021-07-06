@@ -109,4 +109,5 @@ jobs:
           --set service.tag=${{ needs.get-tag.outputs.TAG }} \
           --set nodeEnv=production \
           --namespace sproud-stage \
-          --create-namespace
+          --create-namespace \
+          --force

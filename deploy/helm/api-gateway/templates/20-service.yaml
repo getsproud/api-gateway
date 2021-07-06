@@ -3,7 +3,9 @@ kind: Service
 metadata:
   labels:
     app: {{ $.Values.service.image | quote  }}
-    {{- if ne $.Values.environment "io" }}
+    {{- if and (ne $.Values.environment "io") (contains "rc-" $.Values.service.tag) }}
+    feature: stage
+    {{ - else if ne $.Values.environment "io" }}
     feature: {{ $.Values.service.tag | quote }}
     {{- else }}
     tag: {{ $.Values.service.tag| quote  }}
@@ -16,7 +18,9 @@ spec:
     targetPort: 8080
   selector:
     app: {{ $.Values.service.image }}
-    {{- if ne $.Values.environment "io" }}
+    {{- if and (ne $.Values.environment "io") (contains "rc-" $.Values.service.tag) }}
+    feature: stage
+    {{ - else if ne $.Values.environment "io" }}
     feature: {{ $.Values.service.tag | quote }}
     {{- else }}
     tag: {{ $.Values.service.tag | quote }}

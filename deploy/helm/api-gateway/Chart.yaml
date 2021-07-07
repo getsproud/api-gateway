@@ -1,6 +1,6 @@
 apiVersion: v3
-name: sproud-react-app
-description: sproud Frontend Application
+name: sproud-api-gateway
+description: sproud API Gateway Application
 type: application
 version: 0.0.10
 appVersion: "0.1.0"

@@ -119,8 +119,8 @@ app.use(expressWinston.errorLogger({
   meta: true
 }))
 
-// eslint-disable-next-line
 app.listen(PORT, () => {
+  // eslint-disable-next-line
   console.log(`🤩 sproud.io API Gateway listening on port ${PORT}!`)
 })
 

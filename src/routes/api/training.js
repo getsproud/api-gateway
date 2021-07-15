@@ -11,6 +11,9 @@ const trainingRouter = services => {
       company: req.user.company._id || req.user.company
     }
 
+    if (req.query.q)
+      query.$text = { $search: req.query.q }
+
     try {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 

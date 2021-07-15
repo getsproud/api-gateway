@@ -45,9 +45,8 @@ const rateLimiter = new RateLimit({
   store: new RateLimitStore({
     client: redis.createClient(`redis://${process.env.COTE_DISCOVERY_REDIS_HOST}:6379/1`)
   }),
-  max: 100,
-  windowMs: 1000,
-  delayMs: 0
+  max: 1000,
+  windowMs: 1000 * 60
 })
 
 services.authentication = services.auth

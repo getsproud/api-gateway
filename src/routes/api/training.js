@@ -9,7 +9,7 @@ const trainingRouter = services => {
   router.get('/', async (req, res) => {
     const query = {
       company: req.user.company._id || req.user.company,
-      remote: req.query.remote
+      ...req.query.query
     }
 
     try {

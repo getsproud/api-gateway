@@ -208,7 +208,13 @@ const trainingRouter = services => {
           return p
         }))
 
-        training.data.participants = mergedParticipants
+        const [finalParticipants] = mergedParticipants
+          .map(p => training.data.participants.map(t => {
+            t.participant = p
+            return t
+          }))
+
+        training.data.participants = finalParticipants
       }
 
       if (training.data.departments && training.data.departments.length) {

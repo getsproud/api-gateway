@@ -37,15 +37,15 @@ const trainingRouter = services => {
       const training = await services.training.send({ type: 'findBy', query })
 
       const q = {
-        _id: { $in: training.data.participants.map(p => Types.ObjectId(p)) }
+        _id: { $in: training.data.participants.map(p => Types.ObjectId(p.participant)) }
       }
 
       const participants = await services.employee.send({ type: 'findAllBy', query: q, options: req.query })
 
       if (participants.docs) {
         participants.docs = participants.docs.map(async p => {
-          p.department = await services.department.send({ type: 'findBy', query: { _id: p.department }, useResolve: true })
-          p.interests = await services.category.send({ type: 'findAllBy', query: { _id: { $in: p.interests } }, useResolve: true })
+          p.participant.department = await services.department.send({ type: 'findBy', query: { _id: p.department }, useResolve: true })
+          p.participant.interests = await services.category.send({ type: 'findAllBy', query: { _id: { $in: p.interests } }, useResolve: true })
         })
       }
 
@@ -158,7 +158,7 @@ const trainingRouter = services => {
 
       if (training.data.participants && training.data.participants.length) {
         const promises = training.data.participants.map(p => {
-          const id = Types.ObjectId(p)
+          const id = Types.ObjectId(p.participant)
 
           return new Promise(resolve => services.budget.send({
             type: 'findBy',
@@ -194,7 +194,11 @@ const trainingRouter = services => {
 
         const participants = await services.employee.send({
           type: 'findAllBy',
-          query: { _id: { $in: training.data.participants.map(p => Types.ObjectId(p)) } },
+          query: {
+            _id: {
+              $in: training.data.participants.map(p => Types.ObjectId(p.participant))
+            }
+          },
           useResolve: true,
           options: req.query
         })

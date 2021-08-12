@@ -282,7 +282,8 @@ const trainingRouter = services => {
         query: {
           training: training.data._id,
           employee: participant,
-          remove: req.body.remove || false
+          remove: req.body.remove || false,
+          ticket: req.body.ticket
         }
       })
 

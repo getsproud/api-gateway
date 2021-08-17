@@ -39,10 +39,19 @@ const authRoutes = services => {
 
         res.cookie('sproud.jwt', token, { secure: true, domain: `${domain}` })
 
-        const query = { _id: employee.data.company }
-
-        const company = await services.company.send({ type: 'findBy', query })
+        const company = await services.company.send({ type: 'findBy', query: { _id: employee.data.company } })
         employee.data.company = company.data
+
+        const department = await services.department.send({ type: 'findBy', query: { _id: employee.data.department } })
+        employee.data.company = department.data
+
+        const categories = []
+        await Promise.all(employee.data.interests.map(async interest => {
+          const { data: i } = await services.category.send({ type: 'findBy', query: { _id: interest } })
+          categories.push(i)
+        }))
+
+        employee.data.interests = categories
 
         return res.status(employee.code).json(employee)
       } catch (e) {

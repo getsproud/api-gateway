@@ -43,7 +43,7 @@ const authRoutes = services => {
         employee.data.company = company.data
 
         const department = await services.department.send({ type: 'findBy', query: { _id: employee.data.department } })
-        employee.data.company = department.data
+        employee.data.department = department.data
 
         const categories = []
         await Promise.all(employee.data.interests.map(async interest => {

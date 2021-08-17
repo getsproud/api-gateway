@@ -9,7 +9,10 @@ const secret = fs.readFileSync(path.resolve(__dirname, '../keys/public.pem'), 'u
 
 const services = {
   employee: new ServiceClient('employee'),
-  auth: new ServiceClient('auth')
+  auth: new ServiceClient('auth'),
+  company: new ServiceClient('company'),
+  department: new ServiceClient('department'),
+  category: new ServiceClient('category')
 }
 
 passport.use(new LocalStrategy({
@@ -67,6 +70,21 @@ passport.deserializeUser(async (_id, cb) => {
 
   try {
     const employee = await services.employee.send({ type: 'findBy', query })
+
+    const company = await services.company.send({ type: 'findBy', query: { _id: employee.data.company } })
+    employee.data.company = company.data
+
+    const department = await services.department.send({ type: 'findBy', query: { _id: employee.data.department } })
+    employee.data.department = department.data
+
+    const categories = []
+    await Promise.all(employee.data.interests.map(async interest => {
+      const { data: i } = await services.category.send({ type: 'findBy', query: { _id: interest } })
+      categories.push(i)
+    }))
+
+    employee.data.interests = categories
+
     return cb(null, employee.data)
   } catch (e) {
     return cb(e, null)

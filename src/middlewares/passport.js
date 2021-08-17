@@ -54,6 +54,20 @@ passport.use(new JWTStrategy({
 
   const response = await services.employee.send({ type: 'findBy', query: { _id: jwtPayload._id } })
 
+  const company = await services.company.send({ type: 'findBy', query: { _id: response.data.company } })
+  response.data.company = company.data
+
+  const department = await services.department.send({ type: 'findBy', query: { _id: response.data.department } })
+  response.data.department = department.data
+
+  const categories = []
+  await Promise.all(response.data.interests.map(async interest => {
+    const { data: i } = await services.category.send({ type: 'findBy', query: { _id: interest } })
+    categories.push(i)
+  }))
+
+  response.data.interests = categories
+
   if (!response.data || !response.data._id || !response.data._id.length)
     return done(response, false)
 

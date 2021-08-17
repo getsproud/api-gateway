@@ -215,6 +215,18 @@ const trainingRouter = services => {
           }))
 
         training.data.participants = finalParticipants
+
+        const participantsWithDepartment = []
+        await Promise.all(training.data.participants.map(async participant => {
+          const { data: i } = await services.department.send({ type: 'findBy', query: { _id: participant.department } })
+          const fullParticipant = {
+            ...participant,
+            department: i
+          }
+          participantsWithDepartment.push(fullParticipant)
+        }))
+
+        training.data.participants = participantsWithDepartment
       }
 
       if (training.data.departments && training.data.departments.length) {

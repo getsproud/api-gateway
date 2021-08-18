@@ -313,9 +313,7 @@ const trainingRouter = services => {
         query: { _id: req.params.training }
       })
 
-      const { data: t } = await getFullTrainingInfo(training.data, services, req)
-
-      training.data = t
+      training.data = await getFullTrainingInfo(training.data, services, req)
 
       return res.status(training.code).json(training)
     } catch (e) {

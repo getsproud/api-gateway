@@ -3,6 +3,118 @@ import ical from 'ical-generator'
 import errorToJson from 'error-to-json'
 import { Types } from 'mongoose'
 
+const getFullTrainingInfo = async (training, services, req) => {
+  if (!training)
+    return training
+
+  if (training.data.participants && training.data.participants.length) {
+    const promises = training.data.participants.map(p => {
+      const id = Types.ObjectId(p.participant)
+
+      return new Promise(resolve => services.budget.send({
+        type: 'findBy',
+        query: {
+          employee: Types.ObjectId(id),
+          fromDate: { $lte: new Date(new Date().toISOString()) },
+          toDate: { $gte: new Date(new Date().toISOString()) }
+        }
+      }, budget => {
+        if (budget && budget.data) {
+          return services.budget.send({
+            type: 'getSpendings',
+            query: {
+              reference: training._id,
+              _id: {
+                $in: budget.data.spendings.map(b => Types.ObjectId(b))
+              }
+            }
+          }, approved => resolve({
+            approval: approved.approved ? 'approved' : 'pending',
+            _id: id
+          }))
+        }
+
+        return resolve({
+          approval: 'pending',
+          _id: id
+        })
+      }))
+    })
+
+    const approvals = await Promise.all(promises)
+
+    const participants = await services.employee.send({
+      type: 'findAllBy',
+      query: {
+        _id: {
+          $in: training.data.participants.map(p => Types.ObjectId(p.participant))
+        }
+      },
+      useResolve: true,
+      options: req.query
+    })
+
+    const [mergedParticipants] = participants.data.docs.map(p => approvals.map(a => {
+      p.approval = a.approval
+      return p
+    }))
+
+    const [finalParticipants] = mergedParticipants
+      .map(p => training.data.participants.map(t => {
+        t.participant = p
+        return t
+      }))
+
+    training.data.participants = finalParticipants
+
+    const participantsWithDepartment = []
+    await Promise.all(training.data.participants.map(async participant => {
+      const { data: i } = await services.department.send({ type: 'findBy', query: { _id: participant.participant.department } })
+      participant.participant.department = i
+      participantsWithDepartment.push(participant)
+    }))
+
+    training.data.participants = participantsWithDepartment
+  }
+
+  if (training.data.departments && training.data.departments.length) {
+    const departments = await services.department.send({
+      type: 'findAllBy',
+      query: { _id: { $in: training.data.departments.map(p => Types.ObjectId(p)) } },
+      useResolve: true,
+      options: req.query
+    })
+
+    training.data.departments = departments.data.docs
+  }
+
+  const author = await services.employee.send({
+    type: 'findBy',
+    query: { _id: training.data.author }
+  })
+
+  if (training.data.categories && training.data.categories.length) {
+    const categories = await services.category.send({
+      type: 'findAllBy',
+      query: { _id: { $in: training.data.categories.map(c => Types.ObjectId(c)) } },
+      useResolve: true,
+      options: req.query
+    })
+
+    training.data.categories = categories.data.docs
+  }
+
+  const company = await services.company.send({
+    type: 'findBy',
+    query: { _id: training.data.company }
+  })
+
+  training.data.author = author.data
+  training.data.company = company.data
+
+  return training
+}
+
 const trainingRouter = services => {
   const router = Router()
 
@@ -21,6 +133,15 @@ const trainingRouter = services => {
         })
       } else
         trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
+
+      const fullTrainings = []
+      await Promise.all(trainings.data.map(async training => {
+        const { data: t } = await getFullTrainingInfo(training, services, req)
+
+        fullTrainings.push(t)
+      }))
+
+      trainings.data = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
@@ -96,6 +217,15 @@ const trainingRouter = services => {
     try {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 
+      const fullTrainings = []
+      await Promise.all(trainings.data.map(async training => {
+        const { data: t } = await getFullTrainingInfo(training, services, req)
+
+        fullTrainings.push(t)
+      }))
+
+      trainings.data = fullTrainings
+
       return res.status(trainings.code).json(trainings)
     } catch (e) {
       return res.status(e.code || 500).json(e instanceof Error ? errorToJson(e) : e)
@@ -110,6 +240,15 @@ const trainingRouter = services => {
 
     try {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
+
+      const fullTrainings = []
+      await Promise.all(trainings.data.map(async training => {
+        const { data: t } = await getFullTrainingInfo(training, services, req)
+
+        fullTrainings.push(t)
+      }))
+
+      trainings.data = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
@@ -128,6 +267,15 @@ const trainingRouter = services => {
     try {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 
+      const fullTrainings = []
+      await Promise.all(trainings.data.map(async training => {
+        const { data: t } = await getFullTrainingInfo(training, services, req)
+
+        fullTrainings.push(t)
+      }))
+
+      trainings.data = fullTrainings
+
       return res.status(trainings.code).json(trainings)
     } catch (e) {
       return res.status(e.code || 500).json(e instanceof Error ? errorToJson(e) : e)
@@ -143,6 +291,15 @@ const trainingRouter = services => {
     try {
       const trainings = await services.training.send({ type: 'getRecommended', query, options: req.query })
 
+      const fullTrainings = []
+      await Promise.all(trainings.data.map(async training => {
+        const { data: t } = await getFullTrainingInfo(training, services, req)
+
+        fullTrainings.push(t)
+      }))
+
+      trainings.data = fullTrainings
+
       return res.status(trainings.code).json(trainings)
     } catch (e) {
       return res.status(e.code || 500).json(e instanceof Error ? errorToJson(e) : e)
@@ -156,110 +313,9 @@ const trainingRouter = services => {
         query: { _id: req.params.training }
       })
 
-      if (training.data.participants && training.data.participants.length) {
-        const promises = training.data.participants.map(p => {
-          const id = Types.ObjectId(p.participant)
+      const { data: t } = await getFullTrainingInfo(training, services, req)
 
-          return new Promise(resolve => services.budget.send({
-            type: 'findBy',
-            query: {
-              employee: Types.ObjectId(id),
-              fromDate: { $lte: new Date(new Date().toISOString()) },
-              toDate: { $gte: new Date(new Date().toISOString()) }
-            }
-          }, budget => {
-            if (budget && budget.data) {
-              return services.budget.send({
-                type: 'getSpendings',
-                query: {
-                  reference: req.params.training,
-                  _id: {
-                    $in: budget.data.spendings.map(b => Types.ObjectId(b))
-                  }
-                }
-              }, approved => resolve({
-                approval: approved.approved ? 'approved' : 'pending',
-                _id: id
-              }))
-            }
-
-            return resolve({
-              approval: 'pending',
-              _id: id
-            })
-          }))
-        })
-
-        const approvals = await Promise.all(promises)
-
-        const participants = await services.employee.send({
-          type: 'findAllBy',
-          query: {
-            _id: {
-              $in: training.data.participants.map(p => Types.ObjectId(p.participant))
-            }
-          },
-          useResolve: true,
-          options: req.query
-        })
-
-        const [mergedParticipants] = participants.data.docs.map(p => approvals.map(a => {
-          p.approval = a.approval
-          return p
-        }))
-
-        const [finalParticipants] = mergedParticipants
-          .map(p => training.data.participants.map(t => {
-            t.participant = p
-            return t
-          }))
-
-        training.data.participants = finalParticipants
-
-        const participantsWithDepartment = []
-        await Promise.all(training.data.participants.map(async participant => {
-          const { data: i } = await services.department.send({ type: 'findBy', query: { _id: participant.participant.department } })
-          participant.participant.department = i
-          participantsWithDepartment.push(participant)
-        }))
-
-        training.data.participants = participantsWithDepartment
-      }
-
-      if (training.data.departments && training.data.departments.length) {
-        const departments = await services.department.send({
-          type: 'findAllBy',
-          query: { _id: { $in: training.data.departments.map(p => Types.ObjectId(p)) } },
-          useResolve: true,
-          options: req.query
-        })
-
-        training.data.departments = departments.data.docs
-      }
-
-      const author = await services.employee.send({
-        type: 'findBy',
-        query: { _id: training.data.author }
-      })
-
-      if (training.data.categories && training.data.categories.length) {
-        const categories = await services.category.send({
-          type: 'findAllBy',
-          query: { _id: { $in: training.data.categories.map(c => Types.ObjectId(c)) } },
-          useResolve: true,
-          options: req.query
-        })
-
-        training.data.categories = categories.data.docs
-      }
-
-      const company = await services.company.send({
-        type: 'findBy',
-        query: { _id: training.data.company }
-      })
-
-      training.data.author = author.data
-      training.data.company = company.data
+      training.data = t
 
       return res.status(training.code).json(training)
     } catch (e) {

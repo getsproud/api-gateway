@@ -7,8 +7,8 @@ const getFullTrainingInfo = async (training, services, req) => {
   if (!training)
     return training
 
-  if (training.data.participants && training.data.participants.length) {
-    const promises = training.data.participants.map(p => {
+  if (training.participants && training.participants.length) {
+    const promises = training.participants.map(p => {
       const id = Types.ObjectId(p.participant)
 
       return new Promise(resolve => services.budget.send({
@@ -47,7 +47,7 @@ const getFullTrainingInfo = async (training, services, req) => {
       type: 'findAllBy',
       query: {
         _id: {
-          $in: training.data.participants.map(p => Types.ObjectId(p.participant))
+          $in: training.participants.map(p => Types.ObjectId(p.participant))
         }
       },
       useResolve: true,
@@ -60,57 +60,57 @@ const getFullTrainingInfo = async (training, services, req) => {
     }))
 
     const [finalParticipants] = mergedParticipants
-      .map(p => training.data.participants.map(t => {
+      .map(p => training.participants.map(t => {
         t.participant = p
         return t
       }))
 
-    training.data.participants = finalParticipants
+    training.participants = finalParticipants
 
     const participantsWithDepartment = []
-    await Promise.all(training.data.participants.map(async participant => {
+    await Promise.all(training.participants.map(async participant => {
       const { data: i } = await services.department.send({ type: 'findBy', query: { _id: participant.participant.department } })
       participant.participant.department = i
       participantsWithDepartment.push(participant)
     }))
 
-    training.data.participants = participantsWithDepartment
+    training.participants = participantsWithDepartment
   }
 
-  if (training.data.departments && training.data.departments.length) {
+  if (training.departments && training.departments.length) {
     const departments = await services.department.send({
       type: 'findAllBy',
-      query: { _id: { $in: training.data.departments.map(p => Types.ObjectId(p)) } },
+      query: { _id: { $in: training.departments.map(p => Types.ObjectId(p)) } },
       useResolve: true,
       options: req.query
     })
 
-    training.data.departments = departments.data.docs
+    training.departments = departments.data.docs
   }
 
   const author = await services.employee.send({
     type: 'findBy',
-    query: { _id: training.data.author }
+    query: { _id: training.author }
   })
 
-  if (training.data.categories && training.data.categories.length) {
+  if (training.categories && training.categories.length) {
     const categories = await services.category.send({
       type: 'findAllBy',
-      query: { _id: { $in: training.data.categories.map(c => Types.ObjectId(c)) } },
+      query: { _id: { $in: training.categories.map(c => Types.ObjectId(c)) } },
       useResolve: true,
       options: req.query
     })
 
-    training.data.categories = categories.data.docs
+    training.categories = categories.data.docs
   }
 
   const company = await services.company.send({
     type: 'findBy',
-    query: { _id: training.data.company }
+    query: { _id: training.company }
   })
 
-  training.data.author = author.data
-  training.data.company = company.data
+  training.author = author.data
+  training.company = company.data
 
   return training
 }
@@ -135,13 +135,13 @@ const trainingRouter = services => {
         trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 
       const fullTrainings = []
-      await Promise.all(trainings.data.map(async training => {
-        const { data: t } = await getFullTrainingInfo(training, services, req)
+      await Promise.all(trainings.data.docs.map(async training => {
+        const t = await getFullTrainingInfo(training, services, req)
 
         fullTrainings.push(t)
       }))
 
-      trainings.data = fullTrainings
+      trainings.data.docs = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
@@ -218,13 +218,13 @@ const trainingRouter = services => {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 
       const fullTrainings = []
-      await Promise.all(trainings.data.map(async training => {
+      await Promise.all(trainings.data.docs.map(async training => {
         const { data: t } = await getFullTrainingInfo(training, services, req)
 
         fullTrainings.push(t)
       }))
 
-      trainings.data = fullTrainings
+      trainings.data.docs = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
@@ -242,13 +242,13 @@ const trainingRouter = services => {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 
       const fullTrainings = []
-      await Promise.all(trainings.data.map(async training => {
+      await Promise.all(trainings.data.docs.map(async training => {
         const { data: t } = await getFullTrainingInfo(training, services, req)
 
         fullTrainings.push(t)
       }))
 
-      trainings.data = fullTrainings
+      trainings.data.docs = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
@@ -268,13 +268,13 @@ const trainingRouter = services => {
       const trainings = await services.training.send({ type: 'findAllBy', query, options: req.query })
 
       const fullTrainings = []
-      await Promise.all(trainings.data.map(async training => {
+      await Promise.all(trainings.data.docs.map(async training => {
         const { data: t } = await getFullTrainingInfo(training, services, req)
 
         fullTrainings.push(t)
       }))
 
-      trainings.data = fullTrainings
+      trainings.data.docs = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
@@ -292,13 +292,13 @@ const trainingRouter = services => {
       const trainings = await services.training.send({ type: 'getRecommended', query, options: req.query })
 
       const fullTrainings = []
-      await Promise.all(trainings.data.map(async training => {
+      await Promise.all(trainings.data.docs.map(async training => {
         const { data: t } = await getFullTrainingInfo(training, services, req)
 
         fullTrainings.push(t)
       }))
 
-      trainings.data = fullTrainings
+      trainings.data.docs = fullTrainings
 
       return res.status(trainings.code).json(trainings)
     } catch (e) {
